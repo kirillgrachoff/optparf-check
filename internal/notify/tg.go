@@ -16,7 +16,9 @@ type TgNotifier struct {
 }
 
 func NewTgNotifier(token string) (Notifier, error) {
-	n := &TgNotifier{}
+	n := &TgNotifier{
+		data: make(map[int64][]types.QueryResult),
+	}
 	err := n.init(token)
 	if err != nil {
 		return nil, err
