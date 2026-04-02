@@ -1,0 +1,8 @@
+http:
+  prefix: "https://optparf.ru/index.php?q="
+  suffix: ""
+
+telegram:
+  secret: ${TG_SECRET}
+
+period: 6h
