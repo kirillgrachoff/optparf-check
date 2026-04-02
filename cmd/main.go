@@ -54,7 +54,7 @@ func main() {
 	var err error
 	switch notifyMode {
 	case "tg":
-		notifier, err = notify.NewTgNotifier(config.Telegram.Secret)
+		notifier, err = notify.NewTgNotifier(config.Telegram.Token)
 	case "cli":
 		notifier, err = notify.NewTableNotifier(logger, outFile)
 	default:

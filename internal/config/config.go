@@ -8,10 +8,10 @@ import (
 )
 
 type Config struct {
-	Telegram *TgConfig      `mapstructure:"telegram"`
-	Http     *HttpConfig    `mapstructure:"http"`
+	Telegram *TgConfig     `mapstructure:"telegram"`
+	Http     *HttpConfig   `mapstructure:"http"`
 	Queries  []QueryConfig `mapstructure:"query"`
-	Period   time.Duration  `mapstructure:"period"`
+	Period   time.Duration `mapstructure:"period"`
 }
 
 func (c *Config) Validate() error {
@@ -27,15 +27,15 @@ func (c *Config) Validate() error {
 }
 
 type TgConfig struct {
-	Secret string `mapstructure:"secret"`
+	Token string `mapstructure:"token"`
 }
 
 func (c *TgConfig) Validate() error {
 	if c == nil {
 		return nil
 	}
-	if c.Secret == "" {
-		return errors.New("tg secret is invalid")
+	if c.Token == "" {
+		return errors.New("tg token is invalid")
 	}
 	return nil
 }

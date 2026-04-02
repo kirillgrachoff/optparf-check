@@ -3,6 +3,6 @@ http:
   suffix: ""
 
 telegram:
-  secret: ${TG_SECRET}
+  token: ${TG_TOKEN}
 
 period: 6h
