@@ -81,6 +81,8 @@ func (t *TgNotifier) Flush(ctx context.Context, logger *zap.Logger) error {
 		}
 	}
 
+	clear(t.data)
+
 	return nil
 }
 
