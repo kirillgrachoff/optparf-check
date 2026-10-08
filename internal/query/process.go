@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Process(ctx context.Context, logger *zap.Logger, client *QeuryClient, filter *Filter, queries []types.Query) QueryResult {
+func Process(ctx context.Context, logger *zap.Logger, client *QeuryClient, parser *Parser, queries []types.Query) QueryResult {
 	result := QueryResult{}
 
 	for _, q := range queries {
@@ -18,15 +18,16 @@ func Process(ctx context.Context, logger *zap.Logger, client *QeuryClient, filte
 
 		logger.Info("processing")
 
+		r := types.QueryResult{PeerId: q.PeerId, Pattern: q.Pattern}
 		b, err := client.Get(ctx, logger, q.Pattern)
 		if err != nil {
 			logger.Error("error while querying", zap.Error(err))
+			r.Err = err
+		} else {
+			r.Items = parser.Parse(b)
 		}
-		filtered := filter.Filter(b)
 
-		found := result[q.PeerId]
-		found = append(found, types.QueryResult{PeerId: q.PeerId, Pattern: q.Pattern, Found: filtered})
-		result[q.PeerId] = found
+		result[q.PeerId] = append(result[q.PeerId], r)
 	}
 
 	return result

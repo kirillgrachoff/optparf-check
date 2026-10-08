@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"go.uber.org/zap"
 )
@@ -28,7 +29,7 @@ func (q QeuryClient) Get(ctx context.Context, logger *zap.Logger, payload string
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"POST",
-		fmt.Sprintf("%s%s%s", q.Prefix, payload, q.Suffix),
+		fmt.Sprintf("%s%s%s", q.Prefix, url.QueryEscape(payload), q.Suffix),
 		nil,
 	)
 	if err != nil {

@@ -64,7 +64,7 @@ func main() {
 		logger.Error("error while creating notifier", zap.Error(err))
 	}
 
-	filter := query.NewFilter(".*svc-price.*", "")
+	parser := query.NewParser(config.Http.QueryPrefix)
 	queryClient := query.NewQueryClient(config.Http.QueryPrefix, config.Http.QuerySuffix)
 
 	var ticker *time.Ticker
@@ -77,7 +77,7 @@ func main() {
 	for {
 		logger := logger.With(zap.Time("start", now))
 		logger.Info("start processing")
-		result := query.Process(ctx, logger, queryClient, filter, config.Queries)
+		result := query.Process(ctx, logger, queryClient, parser, config.Queries)
 
 		for peerId, r := range result {
 			notifier.Notify(ctx, logger, peerId, r)

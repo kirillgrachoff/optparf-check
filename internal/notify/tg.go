@@ -2,9 +2,9 @@ package notify
 
 import (
 	"context"
-	"strings"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/kirillgrachoff/optparf-check/internal/types"
 	"go.uber.org/zap"
 )
@@ -29,8 +29,7 @@ func NewTgNotifier(token string) (Notifier, error) {
 func (t *TgNotifier) init(token string) error {
 	tgbot, err := bot.New(
 		token,
-		bot.WithMiddlewares(
-		),
+		bot.WithMiddlewares(),
 	)
 	if err != nil {
 		return err
@@ -43,8 +42,12 @@ func (t *TgNotifier) sendMessage(ctx context.Context, logger *zap.Logger, peerId
 	msg, err := t.bot.SendMessage(
 		ctx,
 		&bot.SendMessageParams{
-			Text:   text,
-			ChatID: peerId,
+			Text:      text,
+			ChatID:    peerId,
+			ParseMode: models.ParseModeHTML,
+			LinkPreviewOptions: &models.LinkPreviewOptions{
+				IsDisabled: bot.True(),
+			},
 		},
 	)
 	logger.Info("message sent", zap.Any("message", msg))
@@ -57,25 +60,8 @@ func (t *TgNotifier) sendMessage(ctx context.Context, logger *zap.Logger, peerId
 
 // Flush implements [Notifier].
 func (t *TgNotifier) Flush(ctx context.Context, logger *zap.Logger) error {
-	preparedMessage := map[int64]*strings.Builder{}
-
 	for peerId, res := range t.data {
-		b, ok := preparedMessage[peerId]
-		if !ok {
-			b = new(strings.Builder)
-			preparedMessage[peerId] = b
-		}
-		for _, r := range res {
-			b.WriteString("Pattern: ")
-			b.WriteString(r.Pattern)
-			b.WriteRune('\n')
-			b.Write(r.Found)
-			b.WriteRune('\n')
-		}
-	}
-
-	for peerId, b := range preparedMessage {
-		err := t.sendMessage(ctx, logger, peerId, b.String())
+		err := t.sendMessage(ctx, logger, peerId, formatTgMessage(res))
 		if err != nil {
 			return err
 		}

@@ -2,8 +2,10 @@ package notify
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/kirillgrachoff/optparf-check/internal/tabwriter"
 	"github.com/kirillgrachoff/optparf-check/internal/types"
 	"go.uber.org/zap"
@@ -35,7 +37,14 @@ func (t *TableNotifier) init() error {
 		return err
 	}
 
-	otable.AppendHeader(table.Row{"peer_id", "pattern", "result"})
+	otable.AppendHeader(table.Row{"peer_id", "pattern", "article", "name", "price"})
+	otable.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 1, AutoMerge: true},
+		{Number: 2, AutoMerge: true},
+		{Number: 5, Align: text.AlignRight},
+	})
+	otable.SetStyle(table.StyleRounded)
+	otable.Style().Options.SeparateRows = false
 
 	t.otable = otable
 
@@ -51,7 +60,17 @@ func (t *TableNotifier) Flush(ctx context.Context, logger *zap.Logger) error {
 // Notify implements [Notifier].
 func (t *TableNotifier) Notify(ctx context.Context, logger *zap.Logger, peerId int64, result []types.QueryResult) error {
 	for _, r := range result {
-		t.otable.AppendRow(table.Row{r.PeerId, r.Pattern, string(r.Found)})
+		pattern := r.Pattern
+		switch {
+		case r.Err != nil:
+			t.otable.AppendRow(table.Row{r.PeerId, pattern, "", "error: " + r.Err.Error(), ""})
+		case len(r.Items) == 0:
+			t.otable.AppendRow(table.Row{r.PeerId, pattern, "", "nothing found", ""})
+		}
+		for _, it := range r.Items {
+			t.otable.AppendRow(table.Row{r.PeerId, pattern, it.Article, it.Name, strings.ReplaceAll(formatPrice(it.Price), nbsp, " ")})
+		}
+		t.otable.AppendSeparator()
 	}
 	return nil
 }
