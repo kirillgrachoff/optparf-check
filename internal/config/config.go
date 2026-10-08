@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"net/url"
 	"time"
 
 	"github.com/kirillgrachoff/optparf-check/internal/types"
@@ -28,6 +29,7 @@ func (c *Config) Validate() error {
 
 type TgConfig struct {
 	Token string `mapstructure:"token"`
+	Proxy string `mapstructure:"proxy"`
 }
 
 func (c *TgConfig) Validate() error {
@@ -36,6 +38,12 @@ func (c *TgConfig) Validate() error {
 	}
 	if c.Token == "" {
 		return errors.New("tg token is invalid")
+	}
+	if c.Proxy != "" {
+		u, err := url.Parse(c.Proxy)
+		if err != nil || u.Scheme == "" || u.Host == "" {
+			return errors.New("tg proxy is invalid: expected scheme://host:port")
+		}
 	}
 	return nil
 }

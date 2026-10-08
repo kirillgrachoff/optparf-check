@@ -2,6 +2,10 @@ package notify
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -15,27 +19,52 @@ type TgNotifier struct {
 	data map[int64][]types.QueryResult
 }
 
-func NewTgNotifier(token string) (Notifier, error) {
+// tgPollTimeout matches the library default used without WithHTTPClient.
+const tgPollTimeout = time.Minute
+
+func NewTgNotifier(token, proxy string) (Notifier, error) {
 	n := &TgNotifier{
 		data: make(map[int64][]types.QueryResult),
 	}
-	err := n.init(token)
+	err := n.init(token, proxy)
 	if err != nil {
 		return nil, err
 	}
 	return n, nil
 }
 
-func (t *TgNotifier) init(token string) error {
+func (t *TgNotifier) init(token, proxy string) error {
+	client, err := newTgHttpClient(proxy)
+	if err != nil {
+		return err
+	}
 	tgbot, err := bot.New(
 		token,
 		bot.WithMiddlewares(),
+		bot.WithHTTPClient(tgPollTimeout, client),
 	)
 	if err != nil {
 		return err
 	}
 	t.bot = tgbot
 	return nil
+}
+
+// newTgHttpClient creates a client for Telegram API; empty proxy means a direct connection.
+func newTgHttpClient(proxy string) (*http.Client, error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil
+	if proxy != "" {
+		proxyURL, err := url.Parse(proxy)
+		if err != nil {
+			return nil, fmt.Errorf("invalid tg proxy: %w", err)
+		}
+		transport.Proxy = http.ProxyURL(proxyURL)
+	}
+	return &http.Client{
+		Timeout:   tgPollTimeout,
+		Transport: transport,
+	}, nil
 }
 
 func (t *TgNotifier) sendMessage(ctx context.Context, logger *zap.Logger, peerId int64, text string) error {

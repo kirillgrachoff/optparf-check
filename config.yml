@@ -4,5 +4,6 @@ http:
 
 telegram:
   token: ${TG_TOKEN}
+  proxy: "http://localhost:8088"
 
 period: 6h

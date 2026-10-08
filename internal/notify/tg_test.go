@@ -22,7 +22,7 @@ func TestExampleSend(t *testing.T) {
 	logger.Debug("check token", zap.String("token", token))
 
 	tg := &TgNotifier{}
-	err := tg.init(os.Getenv("TG_SECRET"))
+	err := tg.init(os.Getenv("TG_SECRET"), os.Getenv("TG_PROXY"))
 	require.NoError(t, err)
 	err = tg.sendMessage(t.Context(), logger, int64(0), "Hello from local machine")
 	assert.NoError(t, err, "message not sent")
