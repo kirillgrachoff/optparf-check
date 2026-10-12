@@ -1,3 +1,4 @@
 config-query.yml
 main
 .env
+.tg_token
